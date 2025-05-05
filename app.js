@@ -1,3 +1,8 @@
+// Supabase 연결 정보
+const supabaseUrl = "https://gwrkyiqylqkxdrlxlfma.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cmt5aXF5bHFreGRybHhsZm1hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0Mzk4MzksImV4cCI6MjA2MjAxNTgzOX0.ejalmvYcU4ZT-Yw4EYQlbEUP3N7Noxh7_OwATv0R0AM";
+
+// Firebase Realtime Database (기존 채팅용)
 const firebaseConfig = {
   apiKey: "AIzaSyBCQJTyfFpW_Ud3b76X7snmHwpgZS4T9I",
   authDomain: "mytalk-65d69.firebaseapp.com",
@@ -10,12 +15,15 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage();
-
-const messageInput = document.getElementById("messageInput");
 const messagesDiv = document.getElementById("messages");
+const messageInput = document.getElementById("messageInput");
 const fileInput = document.getElementById("fileInput");
 
+// Supabase 초기화
+const { createClient } = supabase;
+const supa = createClient(supabaseUrl, supabaseKey);
+
+// 메시지 보내기
 function sendMessage() {
   const text = messageInput.value;
   if (text) {
@@ -28,6 +36,7 @@ function sendMessage() {
   }
 }
 
+// 메시지 실시간 수신
 db.ref("messages").on("child_added", (snapshot) => {
   const msg = snapshot.val();
   const div = document.createElement("div");
@@ -36,18 +45,26 @@ db.ref("messages").on("child_added", (snapshot) => {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-fileInput.addEventListener("change", (e) => {
+// 파일 업로드 → Supabase 사용
+fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
-  const storageRef = storage.ref("uploads/" + file.name);
+  if (!file) return;
 
-  storageRef.put(file).then(() => {
-    storageRef.getDownloadURL().then((url) => {
-      db.ref("messages").push({
-        user: "익명",
-        text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
-        timestamp: Date.now()
-      });
-    });
+  const filePath = `${Date.now()}_${file.name}`;
+  const { data, error } = await supa.storage.from("chat-uploads").upload(filePath, file);
+
+  if (error) {
+    alert("파일 업로드 실패: " + error.message);
+    return;
+  }
+
+  const { data: publicUrlData } = supa.storage.from("chat-uploads").getPublicUrl(filePath);
+  const url = publicUrlData.publicUrl;
+
+  db.ref("messages").push({
+    user: "익명",
+    text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
+    timestamp: Date.now()
   });
 });
 
