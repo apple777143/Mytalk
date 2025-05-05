@@ -7,7 +7,8 @@ function generateSafeFilePath(file) {
       .replace(/\s+/g, "_")
       .replace(/[^\w.-]/g, "")
   );
-  return `${Date.now()}_${safeFileName}`;
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  return `${Date.now()}_${randomSuffix}_${safeFileName}`;
 }
 
 const firebaseConfig = {
@@ -67,30 +68,35 @@ db.ref("messages").on("child_added", (snapshot) => {
 
 // 파일 업로드 + 미리보기
 fileInput.addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
 
-  const filePath = generateSafeFilePath(file);
-  const { data, error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
+  for (const file of files) {
+    const filePath = generateSafeFilePath(file);
+    const { data, error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
 
-  if (error) {
-    alert("파일 업로드 실패: " + error.message);
-    return;
+    if (error) {
+      alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
+      continue;
+    }
+
+    const { data: urlData } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
+    const url = urlData.publicUrl;
+    const isImage = file.type.startsWith("image/");
+
+    const previewHTML = isImage
+      ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
+      : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
+
+    db.ref("messages").push({
+      user: "익명",
+      text: previewHTML,
+      timestamp: Date.now()
+    });
   }
 
-  const { data: urlData } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
-  const url = urlData.publicUrl;
-  const isImage = file.type.startsWith("image/");
-
-  const previewHTML = isImage
-    ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
-    : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
-
-  db.ref("messages").push({
-    user: "익명",
-    text: previewHTML,
-    timestamp: Date.now()
-  });
+  // 입력 초기화 (같은 파일 다시 선택해도 이벤트 발생하도록)
+  fileInput.value = "";
 });
 
 // Lightbox 닫기
