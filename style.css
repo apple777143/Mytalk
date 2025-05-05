@@ -36,3 +36,19 @@ main {
   display: inline-block;
   vertical-align: top;
 }
+
+
+#messages img {
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: 5px;
+  cursor: pointer; /* 마우스를 이미지 위에 올리면 손가락 모양 */
+}
+
+#lightbox {
+  transition: 0.2s ease;
+}
+
+#lightbox-img {
+  box-shadow: 0 0 10px rgba(255,255,255,0.4);
+}
