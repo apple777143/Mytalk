@@ -1,14 +1,13 @@
-// Firebase 설정
 const firebaseConfig = {
-    apiKey: "AIzaSyBCQJTyfpFw_Ud3b76X7snwHwpgZS24T9I",
-    authDomain: "mytalk-65d69.firebaseapp.com",
-    databaseURL: "https://mytalk-65d69-default-rtdb.firebaseio.com",
-    projectId: "mytalk-65d69",
-    storageBucket: "mytalk-65d69.firebasestorage.app",
-    messagingSenderId: "366332819668",
-    appId: "1:366332819668:web:76f324fbc7cf57c89ca341"
-  };
-  
+  apiKey: "AIzaSyBCQJTyfFpW_Ud3b76X7snmHwpgZS4T9I",
+  authDomain: "mytalk-65d69.firebaseapp.com",
+  databaseURL: "https://mytalk-65d69-default-rtdb.firebaseio.com",
+  projectId: "mytalk-65d69",
+  storageBucket: "mytalk-65d69.appspot.com",
+  messagingSenderId: "366332819668",
+  appId: "1:366332819668:web:76f324fbc7cf57c89ca341"
+};
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const storage = firebase.storage();
@@ -32,7 +31,7 @@ function sendMessage() {
 db.ref("messages").on("child_added", (snapshot) => {
   const msg = snapshot.val();
   const div = document.createElement("div");
-  div.textContent = msg.user + ": " + msg.text;
+  div.innerHTML = `<strong>${msg.user}</strong>: ${msg.text}`;
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
@@ -40,11 +39,12 @@ db.ref("messages").on("child_added", (snapshot) => {
 fileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   const storageRef = storage.ref("uploads/" + file.name);
+
   storageRef.put(file).then(() => {
     storageRef.getDownloadURL().then((url) => {
       db.ref("messages").push({
         user: "익명",
-        text: "파일: " + url,
+        text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
         timestamp: Date.now()
       });
     });
