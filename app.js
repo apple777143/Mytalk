@@ -65,9 +65,17 @@ db.ref("messages").on("child_added", (snapshot) => {
 });
 
 // 파일 업로드 + 미리보기
+let isUploading = false;
+
 fileInput.addEventListener("change", async (e) => {
+  if (isUploading) return;  // 동시에 두 번 실행 막기
+  isUploading = true;
+
   const files = Array.from(e.target.files);
-  if (files.length === 0) return;
+  if (files.length === 0) {
+    isUploading = false;
+    return;
+  }
 
   const imageHTMLs = [];
   const imageLinks = [];
@@ -96,7 +104,6 @@ fileInput.addEventListener("change", async (e) => {
       imageHTMLs.push(`<img src="${url}" alt="${file.name}" class="chat-image" />`);
       imageLinks.push(`<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`);
     } else {
-      // 이미지가 아닌 파일은 개별 전송
       db.ref("messages").push({
         user: "익명",
         text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
@@ -105,7 +112,6 @@ fileInput.addEventListener("change", async (e) => {
     }
   }
 
-  // 이미지가 있다면 묶어서 한 메시지로 전송
   if (imageHTMLs.length > 0) {
     const combinedHTML = `
       ${imageHTMLs.join(" ")}<br>
@@ -119,6 +125,7 @@ fileInput.addEventListener("change", async (e) => {
   }
 
   fileInput.value = "";
+  isUploading = false;
 });
 
 // Lightbox 닫기
