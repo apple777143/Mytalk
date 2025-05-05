@@ -45,16 +45,27 @@ function sendMessage() {
   }
 }
 
-// 메시지 받기
+// 메시지 받기 + 이미지 확대 이벤트 연결
 db.ref("messages").on("child_added", (snapshot) => {
   const msg = snapshot.val();
   const div = document.createElement("div");
   div.innerHTML = `<strong>${msg.user}</strong>:<br>${msg.text}`;
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+  // ✅ 이미지가 있을 경우 클릭 이벤트 직접 연결
+  const img = div.querySelector("img");
+  if (img) {
+    img.addEventListener("click", () => {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightbox-img");
+      lightboxImg.src = img.src;
+      lightbox.style.display = "flex";
+    });
+  }
 });
 
-// 파일 업로드 + 미리보기 + 확대
+// 파일 업로드 + 미리보기
 fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -82,16 +93,7 @@ fileInput.addEventListener("change", async (e) => {
   });
 });
 
-// Lightbox 이미지 확대 기능
-messagesDiv.addEventListener("click", (e) => {
-  if (e.target.tagName === "IMG") {
-    const lightbox = document.getElementById("lightbox");
-    const lightboxImg = document.getElementById("lightbox-img");
-    lightboxImg.src = e.target.src;
-    lightbox.style.display = "flex";
-  }
-});
-
+// Lightbox 닫기
 document.getElementById("lightbox").addEventListener("click", function () {
   this.style.display = "none";
 });
