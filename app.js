@@ -1,4 +1,4 @@
-// 안전한 파일 이름 생성 함수 (한글/특수문자 제거 + 인코딩)
+// 안전한 파일 이름 생성 함수
 function generateSafeFilePath(file) {
   const safeFileName = encodeURIComponent(
     file.name
@@ -49,12 +49,12 @@ function sendMessage() {
 db.ref("messages").on("child_added", (snapshot) => {
   const msg = snapshot.val();
   const div = document.createElement("div");
-  div.innerHTML = `<strong>${msg.user}</strong>: ${msg.text}`;
+  div.innerHTML = `<strong>${msg.user}</strong>:<br>${msg.text}`;
   messagesDiv.appendChild(div);
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// 파일 업로드 + 미리보기 기능
+// 파일 업로드 + 미리보기 + 확대
 fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -72,7 +72,7 @@ fileInput.addEventListener("change", async (e) => {
   const isImage = file.type.startsWith("image/");
 
   const previewHTML = isImage
-    ? `<img src="${url}" alt="${file.name}" style="max-width: 200px; border-radius: 8px; margin-top: 5px;" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
+    ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
     : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
 
   db.ref("messages").push({
@@ -80,6 +80,20 @@ fileInput.addEventListener("change", async (e) => {
     text: previewHTML,
     timestamp: Date.now()
   });
+});
+
+// Lightbox 이미지 확대 기능
+messagesDiv.addEventListener("click", (e) => {
+  if (e.target.tagName === "IMG") {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    lightboxImg.src = e.target.src;
+    lightbox.style.display = "flex";
+  }
+});
+
+document.getElementById("lightbox").addEventListener("click", function () {
+  this.style.display = "none";
 });
 
 function logout() {
