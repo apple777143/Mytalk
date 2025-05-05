@@ -71,42 +71,61 @@ fileInput.addEventListener("change", async (e) => {
   const files = Array.from(e.target.files);
   if (files.length === 0) return;
 
+  const imageBlocks = [];
+  const nonImageFiles = [];
+
   for (const file of files) {
-    try {
-      const filePath = generateSafeFilePath(file);
-      const { data, error } = await supabase.storage
-        .from("chat-uploads")
-        .upload(filePath, file);
+    const filePath = generateSafeFilePath(file);
+    const { data, error } = await supabase
+      .storage
+      .from("chat-uploads")
+      .upload(filePath, file);
 
-      if (error) {
-        console.error(`❌ ${file.name} 업로드 실패:`, error.message);
-        alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
-        continue;
-      }
+    if (error) {
+      alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
+      continue;
+    }
 
-      const { data: urlData } = supabase.storage
-        .from("chat-uploads")
-        .getPublicUrl(filePath);
+    const { data: urlData } = supabase
+      .storage
+      .from("chat-uploads")
+      .getPublicUrl(filePath);
 
-      const url = urlData.publicUrl;
-      const isImage = file.type.startsWith("image/");
+    const url = urlData.publicUrl;
+    const isImage = file.type.startsWith("image/");
 
-      const previewHTML = isImage
-        ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
-        : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
-
+    if (isImage) {
+      imageBlocks.push({
+        name: file.name,
+        url: url
+      });
+    } else {
+      // 이미지 아닌 파일은 바로 전송
       db.ref("messages").push({
         user: "익명",
-        text: previewHTML,
+        text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
         timestamp: Date.now()
       });
-
-    } catch (err) {
-      console.error(`업로드 중 예외 발생 (${file.name}):`, err);
     }
   }
 
-  // ✅ 반드시 루프 끝난 후에 초기화
+  // 이미지 묶어서 한 메시지로 전송
+  if (imageBlocks.length > 0) {
+    const imageHTML = imageBlocks.map(img =>
+      `<img src="${img.url}" alt="${img.name}" class="chat-image" />`
+    ).join(" ");
+
+    const downloadLinks = imageBlocks.map(img =>
+      `<a href="${img.url}" download="${img.name}">[${img.name} 다운로드]</a>`
+    ).join("<br>");
+
+    db.ref("messages").push({
+      user: "익명",
+      text: `${imageHTML}<br>${downloadLinks}`,
+      timestamp: Date.now()
+    });
+  }
+
   fileInput.value = "";
 });
 
