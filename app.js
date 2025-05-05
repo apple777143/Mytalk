@@ -71,8 +71,8 @@ fileInput.addEventListener("change", async (e) => {
   const files = Array.from(e.target.files);
   if (files.length === 0) return;
 
-  const imageBlocks = [];
-  const nonImageFiles = [];
+  const imageHTMLs = [];
+  const imageLinks = [];
 
   for (const file of files) {
     const filePath = generateSafeFilePath(file);
@@ -82,7 +82,7 @@ fileInput.addEventListener("change", async (e) => {
       .upload(filePath, file);
 
     if (error) {
-      alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
+      alert(`❌ ${file.name} 업로드 실패: ${error.message}`);
       continue;
     }
 
@@ -95,12 +95,10 @@ fileInput.addEventListener("change", async (e) => {
     const isImage = file.type.startsWith("image/");
 
     if (isImage) {
-      imageBlocks.push({
-        name: file.name,
-        url: url
-      });
+      imageHTMLs.push(`<img src="${url}" alt="${file.name}" class="chat-image" />`);
+      imageLinks.push(`<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`);
     } else {
-      // 이미지 아닌 파일은 바로 전송
+      // 이미지가 아닌 파일은 개별 전송
       db.ref("messages").push({
         user: "익명",
         text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
@@ -109,23 +107,17 @@ fileInput.addEventListener("change", async (e) => {
     }
   }
 
-  // 이미지 묶어서 한 메시지로 전송
-  if (imageBlocks.length > 0) {
-    const imageHTML = imageBlocks.map(img =>
-      `<img src="${img.url}" alt="${img.name}" class="chat-image" />`
-    ).join(" ");
-
-    const downloadLinks = imageBlocks.map(img =>
-      `<a href="${img.url}" download="${img.name}">[${img.name} 다운로드]</a>`
-    ).join("<br>");
-
+  // 이미지가 하나라도 있으면 묶어서 한 번에 전송
+  if (imageHTMLs.length > 0) {
+    const finalHTML = imageHTMLs.join(" ") + "<br>" + imageLinks.join("<br>");
     db.ref("messages").push({
       user: "익명",
-      text: `${imageHTML}<br>${downloadLinks}`,
+      text: finalHTML,
       timestamp: Date.now()
     });
   }
 
+  // 인풋 초기화 (같은 파일 다시 선택 가능하게)
   fileInput.value = "";
 });
 
