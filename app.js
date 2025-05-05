@@ -54,15 +54,14 @@ db.ref("messages").on("child_added", (snapshot) => {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
   // ✅ 이미지가 있을 경우 클릭 이벤트 직접 연결
-  const img = div.querySelector("img");
-  if (img) {
-    img.addEventListener("click", () => {
-      const lightbox = document.getElementById("lightbox");
-      const lightboxImg = document.getElementById("lightbox-img");
-      lightboxImg.src = img.src;
-      lightbox.style.display = "flex";
-    });
-  }
+  const imgs = div.querySelectorAll("img");
+  imgs.forEach((img) => {
+  img.addEventListener("click", () => {
+    const lightbox = document.getElementById("lightbox");
+    const lightboxImg = document.getElementById("lightbox-img");
+    lightboxImg.src = img.src;
+    lightbox.style.display = "flex";
+  });
 });
 
 // 파일 업로드 + 미리보기
