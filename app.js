@@ -56,13 +56,14 @@ db.ref("messages").on("child_added", (snapshot) => {
 
   // ✅ 이미지가 있을 경우 클릭 이벤트 직접 연결
   const imgs = div.querySelectorAll("img");
-imgs.forEach((img) => {
-  img.addEventListener("click", () => {
-    const lightbox = document.getElementById("lightbox");
-    const lightboxImg = document.getElementById("lightbox-img");
-    lightboxImg.src = img.src;
-    lightbox.style.display = "flex";
-  });
+  imgs.forEach((img) => {
+    img.addEventListener("click", () => {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightbox-img");
+      lightboxImg.src = img.src;
+      lightbox.style.display = "flex";
+    });
+  }); // ✅ 이 줄이 빠졌었음!!
 });
 
 // 파일 업로드 + 미리보기
@@ -123,7 +124,7 @@ fileInput.addEventListener("change", async (e) => {
 });
 
 // Lightbox 닫기
-document.getElementById("lightbox").addEventListener("click", function () {
+document.getElementById(".addEventListener("click", function () {
   this.style.display = "none";
 });
 
