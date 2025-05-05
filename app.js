@@ -2,6 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyBCQJTyfpFw_Ud3b76X7snwHwpgZS24T9I",
     authDomain: "mytalk-65d69.firebaseapp.com",
+    databaseURL: "https://mytalk-65d69-default-rtdb.firebaseio.com",
     projectId: "mytalk-65d69",
     storageBucket: "mytalk-65d69.firebasestorage.app",
     messagingSenderId: "366332819668",
