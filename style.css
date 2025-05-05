@@ -21,17 +21,19 @@ main {
   background: #fff;
   border: 1px solid #ccc;
   height: 300px;
-  overflow-y: scroll;
+  overflow-y: auto;
   padding: 0.5rem;
   margin-bottom: 1rem;
+  word-break: break-word;
 }
 
 .chat-image {
   max-width: 120px;
   margin: 4px;
-  display: inline-block;
   border-radius: 8px;
   cursor: pointer;
+  display: inline-block;
+  vertical-align: top;
 }
 
 /* ✅ Lightbox 전체 배경 */
