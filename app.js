@@ -48,7 +48,7 @@ fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+  const safeFileName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.]/g, "_");
   const filePath = `${Date.now()}_${safeFileName}`;
   const { data, error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
 
