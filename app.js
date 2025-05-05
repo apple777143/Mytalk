@@ -1,4 +1,15 @@
-// Firebase 연결 (채팅용)
+// 안전한 파일 이름 생성 함수 (한글/특수문자 제거 + 인코딩)
+function generateSafeFilePath(file) {
+  const safeFileName = encodeURIComponent(
+    file.name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "_")
+      .replace(/[^\w.-]/g, "")
+  );
+  return `${Date.now()}_${safeFileName}`;
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyBCQJTyfFpW_Ud3b76X7snmHwpgZS4T9I",
   authDomain: "mytalk-65d69.firebaseapp.com",
@@ -43,13 +54,12 @@ db.ref("messages").on("child_added", (snapshot) => {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// 파일 업로드
+// 파일 업로드 + 미리보기 기능
 fileInput.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const safeFileName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.]/g, "_");
-  const filePath = `${Date.now()}_${safeFileName}`;
+  const filePath = generateSafeFilePath(file);
   const { data, error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
 
   if (error) {
@@ -59,10 +69,15 @@ fileInput.addEventListener("change", async (e) => {
 
   const { data: urlData } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
   const url = urlData.publicUrl;
+  const isImage = file.type.startsWith("image/");
+
+  const previewHTML = isImage
+    ? `<img src="${url}" alt="${file.name}" style="max-width: 200px; border-radius: 8px; margin-top: 5px;" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
+    : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
 
   db.ref("messages").push({
     user: "익명",
-    text: `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`,
+    text: previewHTML,
     timestamp: Date.now()
   });
 });
