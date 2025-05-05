@@ -26,18 +26,12 @@ main {
   margin-bottom: 1rem;
 }
 
-/* ✅ 이미지 미리보기용 썸네일 스타일 */
-.chat-image {
-  max-width: 200px;
-  border-radius: 8px;
-  margin-top: 5px;
-  cursor: pointer;
-}
-
 .chat-image {
   max-width: 120px;
   margin: 4px;
   display: inline-block;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 /* ✅ Lightbox 전체 배경 */
