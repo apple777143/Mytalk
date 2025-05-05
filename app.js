@@ -68,34 +68,45 @@ db.ref("messages").on("child_added", (snapshot) => {
 
 // 파일 업로드 + 미리보기
 fileInput.addEventListener("change", async (e) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
 
   for (const file of files) {
-    const filePath = generateSafeFilePath(file);
-    const { data, error } = await supabase.storage.from("chat-uploads").upload(filePath, file);
+    try {
+      const filePath = generateSafeFilePath(file);
+      const { data, error } = await supabase.storage
+        .from("chat-uploads")
+        .upload(filePath, file);
 
-    if (error) {
-      alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
-      continue;
+      if (error) {
+        console.error(`❌ ${file.name} 업로드 실패:`, error.message);
+        alert(`파일 업로드 실패: ${file.name} - ${error.message}`);
+        continue;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("chat-uploads")
+        .getPublicUrl(filePath);
+
+      const url = urlData.publicUrl;
+      const isImage = file.type.startsWith("image/");
+
+      const previewHTML = isImage
+        ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
+        : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
+
+      db.ref("messages").push({
+        user: "익명",
+        text: previewHTML,
+        timestamp: Date.now()
+      });
+
+    } catch (err) {
+      console.error(`업로드 중 예외 발생 (${file.name}):`, err);
     }
-
-    const { data: urlData } = supabase.storage.from("chat-uploads").getPublicUrl(filePath);
-    const url = urlData.publicUrl;
-    const isImage = file.type.startsWith("image/");
-
-    const previewHTML = isImage
-      ? `<img src="${url}" alt="${file.name}" class="chat-image" /><br><a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`
-      : `<a href="${url}" download="${file.name}">[${file.name} 다운로드]</a>`;
-
-    db.ref("messages").push({
-      user: "익명",
-      text: previewHTML,
-      timestamp: Date.now()
-    });
   }
 
-  // 입력 초기화 (같은 파일 다시 선택해도 이벤트 발생하도록)
+  // ✅ 반드시 루프 끝난 후에 초기화
   fileInput.value = "";
 });
 
