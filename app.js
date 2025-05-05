@@ -107,17 +107,19 @@ fileInput.addEventListener("change", async (e) => {
     }
   }
 
-  // 이미지가 하나라도 있으면 묶어서 한 번에 전송
+  // 이미지가 있다면 묶어서 한 메시지로 전송
   if (imageHTMLs.length > 0) {
-    const finalHTML = imageHTMLs.join(" ") + "<br>" + imageLinks.join("<br>");
+    const combinedHTML = `
+      ${imageHTMLs.join(" ")}<br>
+      ${imageLinks.join("<br>")}
+    `;
     db.ref("messages").push({
       user: "익명",
-      text: finalHTML,
+      text: combinedHTML,
       timestamp: Date.now()
     });
   }
 
-  // 인풋 초기화 (같은 파일 다시 선택 가능하게)
   fileInput.value = "";
 });
 
